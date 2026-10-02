@@ -10,7 +10,7 @@ const {
 } = require('./update-version');
 
 /**
- * Retorna o caminho correto de distribuição compilado pelo Angular 19
+ * Retorna o caminho de distribuição compilado pelo Angular 19
  */
 function getDistPath() {
   const browserPath = path.resolve(__dirname, '..', 'dist', 'barao-v2', 'browser');
@@ -18,6 +18,21 @@ function getDistPath() {
     return browserPath;
   }
   return path.resolve(__dirname, '..', 'dist', 'barao-v2');
+}
+
+/**
+ * Verifica se o host de destino é a própria máquina executando o script
+ */
+function isLocalHost(targetHost) {
+  if (['localhost', '127.0.0.1'].includes(targetHost)) return true;
+  try {
+    const res = spawnSync('hostname', ['-I'], { encoding: 'utf8', shell: true });
+    if (res.status === 0 && res.stdout) {
+      const ips = res.stdout.split(/\s+/).filter(Boolean);
+      if (ips.includes(targetHost)) return true;
+    }
+  } catch (e) {}
+  return false;
 }
 
 /**
@@ -95,7 +110,8 @@ function injectBuildInfo(distPath, versionInfo) {
  */
 function deployFrontend(targetHost) {
   const distPath = getDistPath();
-  const remoteDest = `lrdev@${targetHost}:/ws/php/barao/public/v2/`;
+  const isSelf = isLocalHost(targetHost);
+  const remoteDest = isSelf ? '/ws/php/barao/public/v2/' : `lrdev@${targetHost}:/ws/php/barao/public/v2/`;
 
   if (!fs.existsSync(distPath)) {
     console.error(`Erro: Diretório de distribuição não encontrado em ${distPath}`);
@@ -104,7 +120,9 @@ function deployFrontend(targetHost) {
 
   console.log(`Enviando arquivos do frontend de ${distPath} para o servidor ${remoteDest}...`);
 
-  const rsyncResult = spawnSync('rsync', ['-avz', './', remoteDest], {
+  const rsyncArgs = ['-avz', './', remoteDest];
+
+  const rsyncResult = spawnSync('rsync', rsyncArgs, {
     cwd: distPath,
     stdio: 'inherit',
     shell: true
