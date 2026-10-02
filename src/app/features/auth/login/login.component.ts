@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { StorageService } from '@core/services/storage.service';
 import { ThemeService } from '@core/services/theme.service';
+import { VersionCheckService } from '@core/services/version-check.service';
 import { 
   LucideAngularModule, 
   Lock, 
@@ -50,7 +51,10 @@ export class LoginComponent implements OnInit {
   readonly SwitchIcon = RotateCcw;
 
   public currentYear = new Date().getFullYear();
-  public version = '2.0';
+  public versionCheckService = inject(VersionCheckService);
+  public get version(): string {
+    return this.versionCheckService.currentVersion();
+  }
 
   public loginForm!: FormGroup;
   public isLoading = signal<boolean>(false);

@@ -258,11 +258,37 @@ function applyVersionAndDate(info) {
   try {
     fs.writeFileSync(srcVersionPath, JSON.stringify({
       version: newVersion,
-      updated_at: newDate
+      updated_at: newDate,
+      timestamp: Date.now()
     }, null, 2) + '\n', 'utf8');
   } catch (e) {
     console.warn('Aviso: Não foi possível atualizar src/version.json:', e.message);
   }
+
+  // 4. Atualizar src/environments/environment.ts e environment.prod.ts
+  const envFiles = [
+    path.join(rootDir, 'src', 'environments', 'environment.ts'),
+    path.join(rootDir, 'src', 'environments', 'environment.prod.ts')
+  ];
+
+  envFiles.forEach((envPath) => {
+    if (fs.existsSync(envPath)) {
+      try {
+        let envContent = fs.readFileSync(envPath, 'utf8');
+        envContent = envContent.replace(
+          /(version\s*:\s*(?:win\.__APP_VERSION__\s*\|\|\s*)?['"`])([^'"`]+)(['"`])/,
+          `$1${newVersion}$3`
+        );
+        envContent = envContent.replace(
+          /(updated_at\s*:\s*(?:win\.__APP_UPDATED_AT__\s*\|\|\s*)?['"`])([^'"`]+)(['"`])/,
+          `$1${newDate}$3`
+        );
+        fs.writeFileSync(envPath, envContent, 'utf8');
+      } catch (e) {
+        console.warn(`Aviso: Não foi possível atualizar ${envPath}:`, e.message);
+      }
+    }
+  });
 }
 
 /**

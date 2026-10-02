@@ -5,6 +5,7 @@ import { AuthService } from '@core/services/auth.service';
 import { ThemeService } from '@core/services/theme.service';
 import { StorageService } from '@core/services/storage.service';
 import { RealtimeService } from '@core/services/realtime.service';
+import { VersionCheckService } from '@core/services/version-check.service';
 import { 
   DatatableComponent, 
   ColumnDef, 
@@ -50,6 +51,7 @@ export class DashboardComponent {
   private storageService = inject(StorageService);
   public themeService = inject(ThemeService);
   public realtimeService = inject(RealtimeService);
+  public versionCheckService = inject(VersionCheckService);
 
   public activeTab = signal<'estatico' | 'http'>('estatico');
   public actionMessage = signal<string | null>(null);

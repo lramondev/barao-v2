@@ -14,8 +14,8 @@ const targetHost = isLocal ? '192.168.1.240' : 'remoto.transoeste.com.br';
 
 console.log(`Modo de implantação do Frontend Barão v2: ${isLocal ? 'LOCAL (192.168.1.240)' : 'REMOTO (remoto.transoeste.com.br)'}`);
 
-// 1. Obtém a versão e data/hora
-const versionInfo = getVersionInfo();
+// 1. Obtém a versão e data/hora (sempre incrementa a versão a cada deploy)
+const versionInfo = getVersionInfo({ force: true });
 
 // 2. Executa o build da aplicação Angular para produção
 const buildSuccess = buildAngular();
