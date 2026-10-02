@@ -2,6 +2,7 @@ import {
   Component, 
   OnInit, 
   OnChanges,
+  OnDestroy,
   SimpleChanges, 
   input, 
   output, 
@@ -14,7 +15,9 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
+import { RealtimeService } from '@core/services/realtime.service';
 import { 
   ColumnDef, 
   DatatableAction, 
@@ -22,7 +25,9 @@ import {
   DatatableSort, 
   DatatablePageEvent,
   DatatableApiParams,
-  BadgeColor
+  BadgeColor,
+  DatatableRealtimeConfig,
+  DatatableRealtimeEvent
 } from './datatable.types';
 
 @Component({
@@ -32,14 +37,16 @@ import {
   templateUrl: './datatable.component.html',
   styleUrls: ['./datatable.component.scss']
 })
-export class DatatableComponent<T extends Record<string, any> = any> implements OnInit, OnChanges {
+export class DatatableComponent<T extends Record<string, any> = any> implements OnInit, OnChanges, OnDestroy {
   private apiService = inject(ApiService);
+  public realtimeService = inject(RealtimeService);
 
   // Inputs
   public data = input<T[]>([]);
   public columns = input.required<ColumnDef<T>[]>();
   public actions = input<DatatableAction<T>[]>([]);
   public apiConfig = input<DatatableApiConfig<T>>();
+  public realtimeConfig = input<DatatableRealtimeConfig<T>>();
   public selectable = input<boolean>(true);
   public multiSelect = input<boolean>(true);
   public searchable = input<boolean>(true);
@@ -62,6 +69,7 @@ export class DatatableComponent<T extends Record<string, any> = any> implements 
   public actionClick = output<{ action: DatatableAction<T>; selected: T[] }>();
   public sortChange = output<DatatableSort>();
   public pageChange = output<DatatablePageEvent>();
+  public realtimeEvent = output<DatatableRealtimeEvent<T>>();
 
   // State Signals
   public searchQuery = signal<string>('');
@@ -73,6 +81,12 @@ export class DatatableComponent<T extends Record<string, any> = any> implements 
   public columnVisibility = signal<Record<string, boolean>>({});
   public columnMenuOpen = signal<boolean>(false);
   public actionsMenuOpen = signal<boolean>(false);
+
+  // Realtime & Dynamic State
+  public internalStaticRows = signal<T[]>([]);
+  public pendingRealtimeUpdates = signal<T[]>([]);
+  public recentlyUpdatedKeys = signal<Set<any>>(new Set());
+  private realtimeSub?: Subscription;
 
   // API State
   public apiRows = signal<T[]>([]);
@@ -92,7 +106,7 @@ export class DatatableComponent<T extends Record<string, any> = any> implements 
 
   // Computed: Static processed rows (filter + sort + paginate)
   public processedStaticRows = computed(() => {
-    let rows = [...(this.data() || [])];
+    let rows = [...(this.internalStaticRows() || [])];
     const query = this.searchQuery().trim().toLowerCase();
     const sort = this.currentSort();
 
@@ -176,10 +190,13 @@ export class DatatableComponent<T extends Record<string, any> = any> implements 
   ngOnInit(): void {
     this.currentPageSize.set(this.pageSize());
     this.initColumnVisibility();
+    this.internalStaticRows.set([...(this.data() || [])]);
 
     if (this.apiConfig()) {
       this.loadApiData();
     }
+
+    this.setupRealtimeSubscription();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -189,6 +206,148 @@ export class DatatableComponent<T extends Record<string, any> = any> implements 
     if (changes['pageSize'] && !changes['pageSize'].firstChange) {
       this.currentPageSize.set(this.pageSize());
     }
+    if (changes['data'] && this.data()) {
+      this.internalStaticRows.set([...this.data()]);
+    }
+    if (changes['realtimeConfig']) {
+      this.setupRealtimeSubscription();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.realtimeSub?.unsubscribe();
+  }
+
+  // --- Realtime Subscription & Handling ---
+  private setupRealtimeSubscription(): void {
+    this.realtimeSub?.unsubscribe();
+
+    const cfg = this.realtimeConfig();
+    if (!cfg) return;
+
+    const eventName = cfg.event || cfg.channel;
+    const stream$ = cfg.stream$ || this.realtimeService.fromEvent<any>(cfg.channel, eventName);
+
+    this.realtimeSub = stream$.subscribe({
+      next: (payload) => {
+        this.handleRealtimeIncoming(payload, cfg);
+      },
+      error: (err) => {
+        console.error(`[Datatable Realtime] Erro no canal ${cfg.channel}:`, err);
+      }
+    });
+  }
+
+  private handleRealtimeIncoming(payload: any, cfg: DatatableRealtimeConfig<T>): void {
+    const mode = cfg.mode || 'merge';
+    const trackKey = cfg.trackByKey || this.trackByKey();
+    const shouldHighlight = cfg.highlightOnUpdate !== false;
+
+    let action: 'insert' | 'update' | 'delete' | 'upsert' = 'upsert';
+    let incomingData: any = payload;
+
+    if (payload && typeof payload === 'object' && ('action' in payload || 'data' in payload)) {
+      if (payload.action) action = payload.action;
+      if (payload.data !== undefined) incomingData = payload.data;
+    }
+
+    const items: T[] = Array.isArray(incomingData) ? incomingData : (incomingData ? [incomingData] : []);
+
+    this.realtimeEvent.emit({
+      action,
+      data: incomingData,
+      timestamp: new Date().toISOString()
+    });
+
+    if (mode === 'reload') {
+      if (this.apiConfig()) {
+        this.loadApiData();
+      }
+      return;
+    }
+
+    if (mode === 'notify') {
+      this.pendingRealtimeUpdates.update(prev => [...prev, ...items]);
+      return;
+    }
+
+    if (cfg.customHandler) {
+      if (this.apiConfig()) {
+        this.apiRows.update(rows => cfg.customHandler!(payload, rows));
+      } else {
+        this.internalStaticRows.update(rows => cfg.customHandler!(payload, rows));
+      }
+      return;
+    }
+
+    this.applyMerge(items, action, trackKey, shouldHighlight);
+  }
+
+  private applyMerge(items: T[], action: string, trackKey: string, highlight: boolean): void {
+    const isApi = !!this.apiConfig();
+    const targetSignal = isApi ? this.apiRows : this.internalStaticRows;
+
+    targetSignal.update(currentList => {
+      const updated = [...currentList];
+
+      for (const item of items) {
+        const itemKey = item[trackKey];
+
+        if (action === 'delete') {
+          const idx = updated.findIndex(r => r[trackKey] === itemKey);
+          if (idx > -1) {
+            updated.splice(idx, 1);
+            if (isApi) this.apiTotal.update(t => Math.max(0, t - 1));
+          }
+        } else {
+          const idx = updated.findIndex(r => r[trackKey] === itemKey);
+          if (idx > -1) {
+            updated[idx] = { ...updated[idx], ...item };
+            if (highlight) this.triggerHighlight(itemKey);
+          } else {
+            updated.unshift(item);
+            if (highlight) this.triggerHighlight(itemKey);
+            if (isApi) this.apiTotal.update(t => t + 1);
+          }
+        }
+      }
+
+      return updated;
+    });
+  }
+
+  public applyPendingUpdates(): void {
+    const pending = this.pendingRealtimeUpdates();
+    if (pending.length === 0) return;
+
+    const cfg = this.realtimeConfig();
+    const trackKey = cfg?.trackByKey || this.trackByKey();
+    const highlight = cfg?.highlightOnUpdate !== false;
+
+    this.applyMerge(pending, 'upsert', trackKey, highlight);
+    this.pendingRealtimeUpdates.set([]);
+  }
+
+  public triggerHighlight(keyVal: any): void {
+    if (keyVal === undefined || keyVal === null) return;
+    this.recentlyUpdatedKeys.update(set => {
+      const next = new Set(set);
+      next.add(keyVal);
+      return next;
+    });
+
+    setTimeout(() => {
+      this.recentlyUpdatedKeys.update(set => {
+        const next = new Set(set);
+        next.delete(keyVal);
+        return next;
+      });
+    }, 2500);
+  }
+
+  public isRowRecentlyUpdated(row: T): boolean {
+    const key = this.getRowKey(row);
+    return this.recentlyUpdatedKeys().has(key);
   }
 
   private initColumnVisibility(): void {

@@ -78,3 +78,22 @@ export interface DatatableApiConfig<T = any> {
   extraParams?: Record<string, any>;
   loadFn?: (params: DatatableApiParams) => Observable<DatatableApiResponse<T> | T[]>;
 }
+
+export type RealtimeMode = 'merge' | 'notify' | 'reload';
+
+export interface DatatableRealtimeEvent<T = any> {
+  action?: 'insert' | 'update' | 'delete' | 'upsert';
+  data: T | T[];
+  timestamp?: string;
+}
+
+export interface DatatableRealtimeConfig<T = any> {
+  channel: string; // Ex: 'veiculo', 'cargas', 'notificacao'
+  event?: string; // Ex: 'veiculo', 'status_changed', etc. Se omitido, usa o próprio channel
+  mode?: RealtimeMode; // 'merge' (padrão), 'notify' ou 'reload'
+  trackByKey?: string; // Campo identificador da linha (padrão usa o trackByKey da tabela)
+  highlightOnUpdate?: boolean; // Se true, pisca a linha atualizada (padrão: true)
+  stream$?: Observable<any>; // Stream RxJS opcional direto
+  customHandler?: (eventData: any, currentRows: T[]) => T[];
+}
+

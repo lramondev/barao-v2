@@ -30,6 +30,12 @@ function isLocalHost(targetHost) {
     if (res.status === 0 && res.stdout) {
       const ips = res.stdout.split(/\s+/).filter(Boolean);
       if (ips.includes(targetHost)) return true;
+
+      const getent = spawnSync('getent', ['hosts', targetHost], { encoding: 'utf8', shell: true });
+      if (getent.status === 0 && getent.stdout) {
+        const resolvedIp = getent.stdout.trim().split(/\s+/)[0];
+        if (ips.includes(resolvedIp)) return true;
+      }
     }
   } catch (e) {}
   return false;

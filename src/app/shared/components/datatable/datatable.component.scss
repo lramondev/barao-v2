@@ -18,6 +18,22 @@
   animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+@keyframes realtimePulse {
+  0% {
+    background-color: rgba(16, 185, 129, 0.35);
+  }
+  40% {
+    background-color: rgba(16, 185, 129, 0.2);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.realtime-pulse {
+  animation: realtimePulse 2.5s ease-out forwards !important;
+}
+
 /* Custom scrollbar for horizontal table scrolling */
 ::-webkit-scrollbar {
   height: 6px;

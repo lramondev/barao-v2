@@ -4,11 +4,13 @@ import { of, delay } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
 import { ThemeService } from '@core/services/theme.service';
 import { StorageService } from '@core/services/storage.service';
+import { RealtimeService } from '@core/services/realtime.service';
 import { 
   DatatableComponent, 
   ColumnDef, 
   DatatableAction, 
-  DatatableApiConfig 
+  DatatableApiConfig,
+  DatatableRealtimeConfig
 } from '@shared/components/datatable';
 
 interface Veiculo {
@@ -47,9 +49,28 @@ export class DashboardComponent {
   private authService = inject(AuthService);
   private storageService = inject(StorageService);
   public themeService = inject(ThemeService);
+  public realtimeService = inject(RealtimeService);
 
   public activeTab = signal<'estatico' | 'http'>('estatico');
   public actionMessage = signal<string | null>(null);
+
+  // Configuração Realtime para a tabela de Veículos (Modo Merge com destaque visual)
+  public veiculosRealtimeConfig: DatatableRealtimeConfig<Veiculo> = {
+    channel: 'veiculo',
+    event: 'veiculo',
+    mode: 'merge',
+    trackByKey: 'id',
+    highlightOnUpdate: true
+  };
+
+  // Configuração Realtime para a tabela de Cargas/CT-e (Modo Notify com banner de aviso)
+  public fretesRealtimeConfig: DatatableRealtimeConfig<CargaFrete> = {
+    channel: 'cargas',
+    event: 'cte_update',
+    mode: 'notify',
+    trackByKey: 'id',
+    highlightOnUpdate: true
+  };
 
   get user() {
     return this.authService.currentUser();
@@ -258,6 +279,68 @@ export class DashboardComponent {
     setTimeout(() => {
       this.actionMessage.set(null);
     }, 4000);
+  }
+
+  // --- Ações de Simulação de Tempo Real (Demo) ---
+  public simulateVeiculoStatusChange(): void {
+    const statuses: ('disponivel' | 'em_viagem' | 'manutencao' | 'inativo')[] = [
+      'disponivel', 'em_viagem', 'manutencao', 'inativo'
+    ];
+    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+    const randomId = Math.floor(Math.random() * 12) + 1;
+
+    const simulatedUpdate: Partial<Veiculo> = {
+      id: randomId,
+      status: randomStatus,
+      km_atual: Math.floor(Math.random() * 50000) + 100000,
+      atualizado_em: new Date().toISOString().slice(0, 10)
+    };
+
+    this.realtimeService.simulateEvent('veiculo', 'veiculo', simulatedUpdate);
+    this.showMessage(`⚡ Realtime Simulado: Veículo #${randomId} atualizado para status "${randomStatus}".`);
+  }
+
+  public simulateNewVeiculo(): void {
+    const newId = Date.now();
+    const plates = ['BRA2E19', 'QWE4R56', 'PLK8J22', 'FGT9H34', 'ZETA99', 'LOG2026'];
+    const plate = 'RT' + Math.floor(Math.random() * 90 + 10) + 'X' + Math.floor(Math.random() * 90 + 10);
+
+    const newVeiculo: Veiculo = {
+      id: newId,
+      placa: plate,
+      modelo: 'Scania 540 S V8 Novo',
+      tipo: 'Cavalo Mecânico',
+      motorista: 'Piloto Realtime',
+      capacidade_kg: 52000,
+      km_atual: 120,
+      status: 'disponivel',
+      ativo: true,
+      atualizado_em: new Date().toISOString().slice(0, 10)
+    };
+
+    this.realtimeService.simulateEvent('veiculo', 'veiculo', {
+      action: 'insert',
+      data: newVeiculo
+    });
+    this.showMessage(`⚡ Realtime Simulado: Novo veículo ${plate} inserido no topo da frota!`);
+  }
+
+  public simulateNewCte(): void {
+    const cteNumber = 'CTE-00' + Math.floor(Math.random() * 90000 + 10000);
+    const newCte: CargaFrete = {
+      id: Date.now(),
+      numero_cte: cteNumber,
+      cliente: 'AgroBrasil Logística S.A.',
+      origem: 'Cuiabá - MT',
+      destino: 'Paranaguá - PR',
+      valor_frete: Math.floor(Math.random() * 15000) + 10000,
+      peso_kg: 38000,
+      status: 'emitido',
+      criado_em: new Date().toISOString().replace('T', ' ').slice(0, 19)
+    };
+
+    this.realtimeService.simulateEvent('cargas', 'cte_update', newCte);
+    this.showMessage(`⚡ Realtime Simulado: Novo ${cteNumber} emitido (Modo Notify).`);
   }
 
   logout(): void {
