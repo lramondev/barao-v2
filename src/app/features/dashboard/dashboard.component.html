@@ -1,0 +1,136 @@
+<div class="min-h-screen bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors">
+  
+  <!-- Header / Navbar Superior -->
+  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3.5 flex items-center justify-between sticky top-0 z-20 shadow-sm backdrop-blur-md">
+    
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-brand-600/10 border border-brand-500/20 flex items-center justify-center p-1.5">
+        <img src="assets/system/img/barao.png" alt="Barão" class="w-full h-full object-contain">
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold leading-tight text-slate-900 dark:text-white">Barão v2</h1>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-300/40">
+            Design System & Components
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 font-medium">Gestão Integrada Transoeste</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <!-- Alternar Tema -->
+      <button 
+        (click)="themeService.toggleTheme()" 
+        type="button"
+        class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-brand-600 transition-colors shadow-sm"
+        title="Alternar tema">
+        <span *ngIf="!themeService.isDark()">🌙</span>
+        <span *ngIf="themeService.isDark()">☀️</span>
+      </button>
+
+      <!-- Perfil do Usuário Logado -->
+      <div class="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-800">
+        <img 
+          [src]="user?.avatar_url || 'assets/system/img/no-image.png'" 
+          alt="Avatar" 
+          class="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shadow-sm">
+        
+        <div class="hidden sm:block text-left">
+          <div class="text-xs font-bold text-slate-900 dark:text-white leading-none mb-1">{{ user?.name || 'Administrador' }}</div>
+          <div class="text-[11px] text-slate-400 leading-none truncate max-w-[150px]">{{ empresaAtivaNome }}</div>
+        </div>
+
+        <button 
+          (click)="logout()" 
+          class="ml-1 px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-colors">
+          Sair
+        </button>
+      </div>
+    </div>
+
+  </header>
+
+  <!-- Banner Flutuante de Ação (Toast) -->
+  <div *ngIf="actionMessage()" class="fixed top-20 right-6 z-50 p-4 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xl border border-slate-700 text-xs font-semibold flex items-center gap-3 animate-fade-in max-w-md">
+    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+    <span class="flex-1">{{ actionMessage() }}</span>
+    <button (click)="actionMessage.set(null)" class="text-slate-400 hover:text-white text-xs">✕</button>
+  </div>
+
+  <!-- Conteúdo Principal -->
+  <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+    
+    <!-- Top Card: Apresentação do Componente -->
+    <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 mb-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Componente Chave: Datatable Moderno Reutilizável
+        </div>
+        <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+          Datatable com Suporte Híbrido (Estático e HTTP API)
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-3xl">
+          Desenvolvido 100% com Tailwind CSS e Angular Signals. Possui ordenação multinível, busca instantânea, colunas dinâmicas, ações contextuais, seleção única/múltipla, paginação e exportação para CSV.
+        </p>
+      </div>
+
+      <!-- Seletor de Modo / Tabs -->
+      <div class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 self-start md:self-center shrink-0">
+        <button 
+          type="button"
+          (click)="activeTab.set('estatico')"
+          [ngClass]="activeTab() === 'estatico' ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm font-bold' : 'text-slate-600 dark:text-slate-400 font-medium'"
+          class="px-4 py-2 rounded-lg text-xs transition-all">
+          🚗 Modo Estático (Frota)
+        </button>
+
+        <button 
+          type="button"
+          (click)="activeTab.set('http')"
+          [ngClass]="activeTab() === 'http' ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm font-bold' : 'text-slate-600 dark:text-slate-400 font-medium'"
+          class="px-4 py-2 rounded-lg text-xs transition-all">
+          🌐 Modo HTTP API (CT-e)
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 1: DATATABLE COM DADOS ESTÁTICOS -->
+    <div *ngIf="activeTab() === 'estatico'" class="animate-fade-in">
+      <app-datatable
+        [title]="'Controle de Veículos e Frota'"
+        [subtitle]="'Gerencie os veículos cadastrados, capacidades de carga e ordens de manutenção.'"
+        [data]="veiculosData"
+        [columns]="veiculosColumns"
+        [actions]="veiculosActions"
+        [selectable]="true"
+        [multiSelect]="true"
+        [searchable]="true"
+        [searchPlaceholder]="'Pesquisar placa, modelo, motorista...'"
+        [pageSize]="5"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        (selectionChange)="onRowSelect($event)">
+      </app-datatable>
+    </div>
+
+    <!-- TAB 2: DATATABLE COM API HTTP -->
+    <div *ngIf="activeTab() === 'http'" class="animate-fade-in">
+      <app-datatable
+        [title]="'Emissão de Conhecimentos de Transporte (CT-e)'"
+        [subtitle]="'Carregamento assíncrono via API com paginação e busca reativa direto no backend.'"
+        [columns]="fretesColumns"
+        [actions]="fretesActions"
+        [apiConfig]="fretesApiConfig"
+        [selectable]="true"
+        [multiSelect]="false"
+        [searchable]="true"
+        [searchPlaceholder]="'Pesquisar número do CT-e, tomador, origem...'"
+        [pageSize]="5"
+        [pageSizeOptions]="[5, 10, 20]"
+        (selectionChange)="onRowSelect($event)">
+      </app-datatable>
+    </div>
+
+  </main>
+</div>

@@ -1,0 +1,427 @@
+<div class="w-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-colors">
+  
+  <!-- Barra Superior / Toolbar -->
+  <div class="p-4 sm:p-5 border-b border-slate-200/80 dark:border-slate-800 flex flex-col gap-4">
+    
+    <!-- Top Row: Título & Ações Rápidas -->
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Título / Status de Seleção -->
+      <div class="flex items-center gap-3">
+        <div *ngIf="title() && selectedRows().length === 0">
+          <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight">
+            {{ title() }}
+          </h3>
+          <p *ngIf="subtitle()" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            {{ subtitle() }}
+          </p>
+        </div>
+
+        <!-- Indicador de Seleção Ativa -->
+        <div *ngIf="selectedRows().length > 0" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/80 text-brand-700 dark:text-brand-300 text-xs font-semibold animate-fade-in">
+          <span>{{ selectedRows().length }} {{ selectedRows().length === 1 ? 'registro selecionado' : 'registros selecionados' }}</span>
+          <button 
+            type="button"
+            (click)="clearSelection()"
+            class="ml-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline">
+            Limpar
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra de Ações (Botões fixos e contextuais) -->
+      <div class="flex items-center gap-2 flex-wrap ml-auto">
+        
+        <!-- Ações Primárias / Fixas -->
+        <ng-container *ngFor="let act of actions()">
+          <button 
+            *ngIf="act.fixed || (selectedRows().length > 0 && (act.single || act.multi))"
+            type="button"
+            (click)="executeAction(act)"
+            [disabled]="isActionDisabled(act) || isLoading()"
+            [ngClass]="{
+              'bg-brand-600 hover:bg-brand-500 text-white shadow-sm shadow-brand-600/20': act.variant === 'primary' || !act.variant,
+              'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200': act.variant === 'secondary',
+              'bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900': act.variant === 'danger',
+              'bg-emerald-600 hover:bg-emerald-500 text-white': act.variant === 'success',
+              'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300': act.variant === 'ghost'
+            }"
+            class="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95">
+            <span>{{ act.label }}</span>
+          </button>
+        </ng-container>
+
+        <!-- Menu Dropdown de Mais Ações -->
+        <div class="relative" *ngIf="actions().length > 2">
+          <button 
+            type="button"
+            (click)="toggleActionsMenu()"
+            class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium shadow-sm transition-colors flex items-center gap-1"
+            title="Mais ações">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            </svg>
+          </button>
+
+          <!-- Dropdown Menu -->
+          <div *ngIf="actionsMenuOpen()" class="absolute right-0 mt-1.5 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-30 py-1.5 animate-fade-in">
+            <button 
+              *ngFor="let act of actions()"
+              type="button"
+              (click)="executeAction(act)"
+              [disabled]="isActionDisabled(act)"
+              class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-between">
+              <span>{{ act.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Botão Exportar CSV -->
+        <button 
+          *ngIf="exportable()"
+          type="button"
+          (click)="exportToCsv()"
+          [disabled]="isLoading() || totalRecords() === 0"
+          class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          title="Exportar dados para CSV">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+        </button>
+
+        <!-- Botão Selecionar Colunas Visíveis -->
+        <div class="relative">
+          <button 
+            type="button"
+            (click)="toggleColumnMenu()"
+            class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-colors"
+            title="Personalizar colunas visíveis">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+            </svg>
+          </button>
+
+          <!-- Dropdown Seletor de Colunas -->
+          <div *ngIf="columnMenuOpen()" class="absolute right-0 mt-1.5 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-30 p-2.5 animate-fade-in max-h-72 overflow-y-auto">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mb-1">
+              Colunas Visíveis
+            </div>
+            <label 
+              *ngFor="let col of columns()"
+              class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-xs text-slate-700 dark:text-slate-200">
+              <input 
+                type="checkbox"
+                [checked]="columnVisibility()[col.field] !== false"
+                (change)="toggleColumnVisibility(col.field)"
+                class="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 w-3.5 h-3.5">
+              <span class="truncate">{{ col.header }}</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Botão Atualizar -->
+        <button 
+          type="button"
+          (click)="refresh()"
+          [disabled]="isLoading()"
+          class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-colors"
+          title="Atualizar dados">
+          <svg [class.animate-spin]="isLoading()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- Bottom Row: Campo de Pesquisa -->
+    <div *ngIf="searchable()" class="relative w-full sm:max-w-md">
+      <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+
+      <input 
+        type="text"
+        [value]="searchQuery()"
+        (input)="onSearchInput($any($event.target).value)"
+        [placeholder]="searchPlaceholder()"
+        class="w-full pl-10 pr-9 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors">
+
+      <button 
+        *ngIf="searchQuery()"
+        type="button"
+        (click)="clearSearch()"
+        class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Tabela de Dados -->
+  <div class="w-full overflow-x-auto relative">
+    
+    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+      
+      <!-- Cabeçalho da Tabela -->
+      <thead>
+        <tr class="bg-slate-50/80 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold tracking-wider uppercase text-[11px]">
+          
+          <!-- Coluna de Seleção / Checkbox Mestre -->
+          <th *ngIf="selectable()" class="w-10 px-4 py-3.5 text-center">
+            <input 
+              *ngIf="multiSelect()"
+              type="checkbox"
+              [checked]="isAllSelected()"
+              [indeterminate]="isSomeSelected()"
+              (change)="toggleSelectAll()"
+              [disabled]="displayedRows().length === 0"
+              class="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 w-4 h-4 cursor-pointer">
+          </th>
+
+          <!-- Colunas de Dados -->
+          <th 
+            *ngFor="let col of activeColumns()"
+            (click)="onSort(col.field)"
+            [style.width]="col.width || 'auto'"
+            [style.min-width]="col.minWidth || 'auto'"
+            [style.max-width]="col.maxWidth || 'auto'"
+            [ngClass]="{
+              'cursor-pointer select-none hover:bg-slate-100 dark:hover:bg-slate-800/80': col.sortable !== false,
+              'text-left': col.align === 'left' || !col.align,
+              'text-center': col.align === 'center',
+              'text-right': col.align === 'right'
+            }"
+            class="px-4 py-3.5 transition-colors">
+            
+            <div class="inline-flex items-center gap-1.5" [ngClass]="{ 'justify-end': col.align === 'right', 'justify-center': col.align === 'center' }">
+              <span>{{ col.header }}</span>
+
+              <!-- Indicador de Ordenação -->
+              <span *ngIf="col.sortable !== false" class="text-slate-400">
+                <svg *ngIf="currentSort().field !== col.field" class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+                <svg *ngIf="currentSort().field === col.field && currentSort().direction === 'asc'" class="w-3 h-3 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                </svg>
+                <svg *ngIf="currentSort().field === col.field && currentSort().direction === 'desc'" class="w-3 h-3 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </span>
+            </div>
+
+          </th>
+
+        </tr>
+      </thead>
+
+      <!-- Corpo da Tabela -->
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+        
+        <!-- Skeleton Loading -->
+        <ng-container *ngIf="isLoading()">
+          <tr *ngFor="let i of [1, 2, 3, 4, 5]" class="animate-pulse">
+            <td *ngIf="selectable()" class="px-4 py-3.5 text-center">
+              <div class="w-4 h-4 bg-slate-200 dark:bg-slate-800 rounded mx-auto"></div>
+            </td>
+            <td *ngFor="let col of activeColumns()" class="px-4 py-3.5">
+              <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+            </td>
+          </tr>
+        </ng-container>
+
+        <!-- Registros -->
+        <ng-container *ngIf="!isLoading()">
+          <tr 
+            *ngFor="let row of displayedRows(); let idx = index"
+            (click)="onRowClick(row)"
+            (dblclick)="onRowDblClick(row)"
+            [class.bg-brand-50/50]="isRowSelected(row)"
+            [class.dark:bg-brand-950/20]="isRowSelected(row)"
+            class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer">
+            
+            <!-- Checkbox Linha -->
+            <td *ngIf="selectable()" (click)="toggleSelectRow(row, $event)" class="w-10 px-4 py-3 text-center">
+              <input 
+                type="checkbox"
+                [checked]="isRowSelected(row)"
+                (change)="toggleSelectRow(row)"
+                class="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 w-4 h-4 cursor-pointer">
+            </td>
+
+            <!-- Células das Colunas -->
+            <td 
+              *ngFor="let col of activeColumns()"
+              [ngClass]="{
+                'text-left': col.align === 'left' || !col.align,
+                'text-center': col.align === 'center',
+                'text-right': col.align === 'right'
+              }"
+              class="px-4 py-3 text-slate-700 dark:text-slate-200">
+              
+              <!-- Tipo Badge -->
+              <ng-container *ngIf="col.type === 'badge'">
+                <span 
+                  [ngClass]="{
+                    'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-900': getBadge(col, row).color === 'blue',
+                    'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-900': getBadge(col, row).color === 'green' || getBadge(col, row).color === 'emerald',
+                    'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/60 dark:text-red-300 dark:border-red-900': getBadge(col, row).color === 'red',
+                    'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-900': getBadge(col, row).color === 'yellow' || getBadge(col, row).color === 'amber',
+                    'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-900': getBadge(col, row).color === 'purple' || getBadge(col, row).color === 'indigo',
+                    'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700': getBadge(col, row).color === 'slate'
+                  }"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border">
+                  {{ getBadge(col, row).label }}
+                </span>
+              </ng-container>
+
+              <!-- Tipo Boolean -->
+              <ng-container *ngIf="col.type === 'boolean'">
+                <span class="inline-flex items-center gap-1.5 text-xs font-medium" [class.text-emerald-600]="row[col.field]" [class.text-slate-400]="!row[col.field]">
+                  <span class="w-1.5 h-1.5 rounded-full" [class.bg-emerald-500]="row[col.field]" [class.bg-slate-300]="!row[col.field]"></span>
+                  {{ row[col.field] ? 'Sim' : 'Não' }}
+                </span>
+              </ng-container>
+
+              <!-- Tipo Moeda / Currency -->
+              <ng-container *ngIf="col.type === 'currency'">
+                <span class="font-mono font-medium text-slate-900 dark:text-slate-100">
+                  {{ formatCellValue(col, row) }}
+                </span>
+              </ng-container>
+
+              <!-- Tipos Padrão (Texto, Número, Data, etc.) -->
+              <ng-container *ngIf="col.type !== 'badge' && col.type !== 'boolean' && col.type !== 'currency'">
+                <span class="truncate block">
+                  {{ formatCellValue(col, row) }}
+                </span>
+              </ng-container>
+
+            </td>
+
+          </tr>
+        </ng-container>
+
+      </tbody>
+
+    </table>
+
+    <!-- Estado Vazio -->
+    <div *ngIf="!isLoading() && displayedRows().length === 0" class="py-16 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center gap-2">
+      <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-1">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+        </svg>
+      </div>
+      <p class="text-sm font-medium">{{ emptyMessage() }}</p>
+      <button 
+        *ngIf="searchQuery()" 
+        type="button" 
+        (click)="clearSearch()" 
+        class="text-xs text-brand-600 dark:text-brand-400 font-medium hover:underline">
+        Limpar busca
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Barra Inferior / Paginação -->
+  <div class="p-3.5 sm:px-5 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/50">
+    
+    <!-- Itens por Página & Contador -->
+    <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+      <div class="flex items-center gap-2">
+        <span>Itens por página:</span>
+        <select 
+          [value]="currentPageSize()" 
+          (change)="onPageSizeChange(+$any($event.target).value)"
+          class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-brand-500">
+          <option *ngFor="let size of pageSizeOptions()" [value]="size">{{ size }}</option>
+        </select>
+      </div>
+
+      <span class="text-slate-400">|</span>
+
+      <span>
+        Exibindo 
+        <strong class="text-slate-700 dark:text-slate-300">
+          {{ totalRecords() > 0 ? (currentPage() - 1) * currentPageSize() + 1 : 0 }}
+        </strong>
+        -
+        <strong class="text-slate-700 dark:text-slate-300">
+          {{ (currentPage() * currentPageSize()) > totalRecords() ? totalRecords() : (currentPage() * currentPageSize()) }}
+        </strong>
+        de 
+        <strong class="text-slate-700 dark:text-slate-300">
+          {{ totalRecords() }}
+        </strong>
+      </span>
+    </div>
+
+    <!-- Navegação de Páginas -->
+    <div class="flex items-center gap-1">
+      
+      <!-- Primeira Página -->
+      <button 
+        type="button"
+        (click)="goToPage(1)"
+        [disabled]="currentPage() === 1 || isLoading()"
+        class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        title="Primeira página">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <!-- Página Anterior -->
+      <button 
+        type="button"
+        (click)="goToPage(currentPage() - 1)"
+        [disabled]="currentPage() === 1 || isLoading()"
+        class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        title="Página anterior">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <!-- Indicador Numérico de Página -->
+      <span class="px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200">
+        Pág. {{ currentPage() }} de {{ totalPages() }}
+      </span>
+
+      <!-- Próxima Página -->
+      <button 
+        type="button"
+        (click)="goToPage(currentPage() + 1)"
+        [disabled]="currentPage() === totalPages() || isLoading()"
+        class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        title="Próxima página">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      <!-- Última Página -->
+      <button 
+        type="button"
+        (click)="goToPage(totalPages())"
+        [disabled]="currentPage() === totalPages() || isLoading()"
+        class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        title="Última página">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+        </svg>
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
