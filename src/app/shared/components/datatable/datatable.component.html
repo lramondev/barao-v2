@@ -242,8 +242,7 @@
             *ngFor="let row of displayedRows(); let idx = index"
             (click)="onRowClick(row)"
             (dblclick)="onRowDblClick(row)"
-            [class.bg-brand-50/50]="isRowSelected(row)"
-            [class.dark:bg-brand-950/20]="isRowSelected(row)"
+            [ngClass]="{ 'bg-brand-50/50 dark:bg-brand-950/20': isRowSelected(row) }"
             class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer">
             
             <!-- Checkbox Linha -->
