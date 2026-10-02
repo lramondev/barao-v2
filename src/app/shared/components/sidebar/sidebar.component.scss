@@ -1,0 +1,21 @@
+:host {
+  display: contents;
+}
+
+/* Custom scrollbar para a lista de módulos do menu */
+.menu-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.menu-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.menu-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+
+.menu-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}

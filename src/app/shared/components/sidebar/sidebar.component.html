@@ -1,0 +1,278 @@
+<!-- Backdrop Overlay (Fundo com desfoque) -->
+<div 
+  *ngIf="moduleService.isDrawerOpen()" 
+  (click)="moduleService.closeDrawer()"
+  class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 transition-opacity duration-300 ease-in-out">
+</div>
+
+<!-- Drawer / Sidebar Deslizante -->
+<aside 
+  class="fixed top-0 bottom-0 left-0 w-84 max-w-[88vw] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out"
+  [class.-translate-x-full]="!moduleService.isDrawerOpen()"
+  [class.translate-x-0]="moduleService.isDrawerOpen()">
+  
+  <!-- Header do Menu (Branding Barão & Versão) -->
+  <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90 flex items-center justify-between shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-brand-600/10 border border-brand-500/20 flex items-center justify-center p-2 shadow-sm">
+        <img src="assets/system/img/barao.png" alt="Barão" class="w-full h-full object-contain">
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-base font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">Barão</span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800/80">
+            WebSystem
+          </span>
+        </div>
+        <div class="flex items-center gap-1.5 mt-1 text-[11px] text-slate-400">
+          <span class="font-mono font-medium">v{{ versionCheckService.currentVersion() }}</span>
+          <span *ngIf="versionCheckService.currentUpdatedAt()">&bull;</span>
+          <span *ngIf="versionCheckService.currentUpdatedAt()" class="text-[10px]">{{ versionCheckService.currentUpdatedAt() }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botão Fechar Drawer -->
+    <button 
+      type="button"
+      (click)="moduleService.closeDrawer()" 
+      class="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
+      title="Fechar menu (Esc)">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Campo de Busca Rápida de Módulos e Recursos -->
+  <div class="p-3 border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 shrink-0">
+    <div class="relative">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <input 
+        type="text" 
+        [ngModel]="filterText()"
+        (ngModelChange)="filterText.set($event)"
+        placeholder="Filtrar módulos ou recursos..."
+        class="w-full pl-9 pr-8 py-2 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
+      
+      <button 
+        *ngIf="filterText()" 
+        type="button" 
+        (click)="filterText.set('')"
+        class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+        ✕
+      </button>
+    </div>
+  </div>
+
+  <!-- Lista de Navegação e Módulos (Scrollável) -->
+  <div class="flex-1 overflow-y-auto menu-scrollbar p-3 space-y-1">
+    
+    <!-- Link Direto para o Dashboard -->
+    <a 
+      routerLink="/dashboard" 
+      (click)="moduleService.closeDrawer()"
+      routerLinkActive="bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+      <div class="w-7 h-7 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      </div>
+      <span class="flex-1 font-medium">Início / Dashboard</span>
+      <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-500 font-mono">Hub</span>
+    </a>
+
+    <!-- Divisor de Seção -->
+    <div class="pt-3 pb-1 px-3 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+      <span>Módulos Praetor</span>
+      <span class="text-[10px] lowercase font-normal">({{ menuModules().length }})</span>
+    </div>
+
+    <!-- Lista de Módulos Praetor -->
+    <div *ngFor="let mod of menuModules()" class="rounded-xl overflow-hidden transition-colors">
+      
+      <!-- Cabeçalho do Módulo -->
+      <div 
+        (click)="selectModule(mod)"
+        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 cursor-pointer transition-colors group">
+        
+        <!-- Ícone do Módulo -->
+        <div class="w-7 h-7 rounded-lg bg-gradient-to-br {{ mod.color || 'from-brand-600 to-indigo-600' }} text-white flex items-center justify-center shadow-sm shrink-0">
+          <!-- Ícones SVG específicos por módulo -->
+          <ng-container [ngSwitch]="mod.route">
+            <!-- Tráfego -->
+            <svg *ngSwitchCase="'trafego'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+            </svg>
+            <!-- Fiscal -->
+            <svg *ngSwitchCase="'fiscal'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <!-- Financeiro -->
+            <svg *ngSwitchCase="'financeiro'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <!-- Contabilidade -->
+            <svg *ngSwitchCase="'contabil'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            <!-- Comercial -->
+            <svg *ngSwitchCase="'comercial'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <!-- Manutenção -->
+            <svg *ngSwitchCase="'manutencao'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <!-- Borracharia -->
+            <svg *ngSwitchCase="'borracharia'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <!-- Pessoa -->
+            <svg *ngSwitchCase="'pessoa'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <!-- RH -->
+            <svg *ngSwitchCase="'rh'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <!-- Despachante -->
+            <svg *ngSwitchCase="'despachante'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <!-- Geolocal -->
+            <svg *ngSwitchCase="'geolocal'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <!-- Segurança -->
+            <svg *ngSwitchCase="'seguranca'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <!-- Nuvem -->
+            <svg *ngSwitchCase="'nuvem'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z" />
+            </svg>
+            <!-- Sistema -->
+            <svg *ngSwitchCase="'system'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <!-- Default -->
+            <svg *ngSwitchDefault class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          </ng-container>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-slate-800 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors truncate">
+            {{ mod.name }}
+          </div>
+          <div class="text-[10px] text-slate-400 truncate">
+            {{ mod.resources.length }} recursos
+          </div>
+        </div>
+
+        <!-- Botão Expandir Subrecursos -->
+        <button 
+          type="button" 
+          (click)="toggleExpand(mod.id, $event)"
+          class="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors"
+          [title]="isExpanded(mod.id) ? 'Recolher recursos' : 'Expandir recursos'">
+          <svg 
+            class="w-3.5 h-3.5 transition-transform duration-200" 
+            [class.rotate-90]="isExpanded(mod.id)"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Submenu de Recursos Expandidos -->
+      <div *ngIf="isExpanded(mod.id)" class="pl-10 pr-2 py-1 space-y-0.5 border-l-2 border-slate-200 dark:border-slate-800 ml-6 animate-fade-in">
+        <button 
+          *ngFor="let res of mod.resources"
+          type="button"
+          (click)="openResource(mod, res)"
+          class="w-full text-left px-2.5 py-1.5 rounded-lg text-[11px] text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors flex items-center justify-between group">
+          <span class="truncate">{{ res.name }}</span>
+          <span 
+            class="text-[9px] px-1 rounded uppercase font-semibold shrink-0 ml-1"
+            [ngClass]="{
+              'bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300': res.class === 1,
+              'bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300': res.class === 2,
+              'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-300': res.class === 3
+            }">
+            {{ res.class === 1 ? 'Cad' : res.class === 2 ? 'Oper' : 'Rel' }}
+          </span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Empty State se a busca não retornar nenhum módulo -->
+    <div *ngIf="menuModules().length === 0" class="p-6 text-center text-xs text-slate-400">
+      Nenhum módulo encontrado para "{{ filterText() }}".
+    </div>
+
+  </div>
+
+  <!-- Footer do Menu Lateral (Perfil & Logout - Estilo Praetor) -->
+  <div class="p-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90 shrink-0">
+    
+    <div class="flex items-center justify-between gap-3 mb-2.5">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <img 
+          [src]="user?.avatar_url || 'assets/system/img/no-image.png'" 
+          alt="Avatar" 
+          class="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
+        <div class="min-w-0">
+          <div class="text-xs font-bold text-slate-900 dark:text-white truncate">
+            {{ user?.name || 'Administrador' }}
+          </div>
+          <div class="text-[11px] text-slate-400 truncate">
+            {{ empresaAtivaNome }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Badge Admin se aplicável -->
+      <span *ngIf="user?.admin" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+        Admin
+      </span>
+    </div>
+
+    <div class="flex items-center gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+      <!-- Alternar Tema -->
+      <button 
+        type="button"
+        (click)="themeService.toggleTheme()"
+        class="flex-1 py-1.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-1.5">
+        <span *ngIf="!themeService.isDark()">🌙 Escuro</span>
+        <span *ngIf="themeService.isDark()">☀️ Claro</span>
+      </button>
+
+      <!-- Botão Sair -->
+      <button 
+        type="button" 
+        (click)="logout()"
+        class="py-1.5 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:hover:bg-red-950/60 dark:text-red-400 text-xs font-semibold transition-colors flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+        <span>Sair</span>
+      </button>
+    </div>
+
+  </div>
+
+</aside>

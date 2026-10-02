@@ -1,201 +1,525 @@
-<div class="min-h-screen bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors">
+<!-- Menu Lateral dos Módulos Praetor (Drawer Deslizante) -->
+<app-sidebar />
+
+<div class="min-h-screen bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors flex flex-col">
   
   <!-- Header / Navbar Superior -->
-  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3.5 flex items-center justify-between sticky top-0 z-20 shadow-sm backdrop-blur-md">
+  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm backdrop-blur-md">
     
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-brand-600/10 border border-brand-500/20 flex items-center justify-center p-1.5">
-        <img src="assets/system/img/barao.png" alt="Barão" class="w-full h-full object-contain">
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <h1 class="text-base font-bold leading-tight text-slate-900 dark:text-white">Barão v2</h1>
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800/80">
-            <span>v{{ versionCheckService.currentVersion() }}</span>
-            <span *ngIf="versionCheckService.currentUpdatedAt()" class="text-brand-300 dark:text-brand-700">&bull;</span>
-            <span *ngIf="versionCheckService.currentUpdatedAt()" class="font-normal text-[10px] text-slate-500 dark:text-slate-400">{{ versionCheckService.currentUpdatedAt() }}</span>
-          </span>
+      <!-- Botão Abrir Menu dos Módulos Praetor (Drawer) -->
+      <button 
+        type="button"
+        (click)="moduleService.toggleDrawer()"
+        class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all shadow-sm active:scale-95 flex items-center gap-2"
+        title="Abrir Menu dos Módulos Praetor">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <span class="text-xs font-bold hidden sm:inline">Módulos</span>
+      </button>
+
+      <!-- Logo e Versão do Barão -->
+      <div class="flex items-center gap-3 pl-1 sm:pl-3 sm:border-l border-slate-200 dark:border-slate-800">
+        <div class="w-9 h-9 rounded-xl bg-brand-600/10 border border-brand-500/20 flex items-center justify-center p-1.5 shadow-sm">
+          <img src="assets/system/img/barao.png" alt="Barão" class="w-full h-full object-contain">
         </div>
-        <p class="text-xs text-slate-400 font-medium">Gestão Integrada Transoeste</p>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-base font-extrabold leading-tight text-slate-900 dark:text-white">Barão v2</h1>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800/80">
+              <span class="font-bold">v{{ versionCheckService.currentVersion() }}</span>
+              <span *ngIf="versionCheckService.currentUpdatedAt()" class="text-brand-300 dark:text-brand-700">&bull;</span>
+              <span *ngIf="versionCheckService.currentUpdatedAt()" class="font-normal text-[10px] text-slate-500 dark:text-slate-400">{{ versionCheckService.currentUpdatedAt() }}</span>
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 font-medium hidden md:block">Sistema de Gestão TMS & Praetor Integrado</p>
+        </div>
       </div>
     </div>
 
-    <div class="flex items-center gap-3">
-      <!-- Alternar Tema -->
+    <!-- Controles da Direita -->
+    <div class="flex items-center gap-2.5 sm:gap-3">
+      
+      <!-- Indicador Realtime -->
+      <div class="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>Realtime Conectado</span>
+      </div>
+
+      <!-- Empresa Ativa -->
+      <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+        <svg class="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+        <span class="truncate max-w-[140px]">{{ empresaAtivaNome }}</span>
+      </div>
+
+      <!-- Alternar Tema Claro / Escuro -->
       <button 
         (click)="themeService.toggleTheme()" 
         type="button"
         class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-brand-600 transition-colors shadow-sm"
-        title="Alternar tema">
+        title="Alternar tema claro/escuro">
         <span *ngIf="!themeService.isDark()">🌙</span>
         <span *ngIf="themeService.isDark()">☀️</span>
       </button>
 
       <!-- Perfil do Usuário Logado -->
-      <div class="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-800">
+      <div class="flex items-center gap-2 pl-2 sm:pl-3 border-l border-slate-200 dark:border-slate-800">
         <img 
           [src]="user?.avatar_url || 'assets/system/img/no-image.png'" 
           alt="Avatar" 
           class="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shadow-sm">
         
-        <div class="hidden sm:block text-left">
-          <div class="text-xs font-bold text-slate-900 dark:text-white leading-none mb-1">{{ user?.name || 'Administrador' }}</div>
-          <div class="text-[11px] text-slate-400 leading-none truncate max-w-[150px]">{{ empresaAtivaNome }}</div>
+        <div class="hidden xl:block text-left">
+          <div class="text-xs font-bold text-slate-900 dark:text-white leading-none mb-0.5">{{ user?.name || 'Administrador' }}</div>
+          <div class="text-[10px] text-slate-400 leading-none truncate max-w-[120px]">{{ user?.email }}</div>
         </div>
 
         <button 
           (click)="logout()" 
-          class="ml-1 px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-colors">
+          class="px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-colors">
           Sair
         </button>
       </div>
+
     </div>
 
   </header>
 
-  <!-- Banner Flutuante de Ação (Toast) -->
-  <div *ngIf="actionMessage()" class="fixed top-20 right-6 z-50 p-4 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xl border border-slate-700 text-xs font-semibold flex items-center gap-3 animate-fade-in max-w-md">
+  <!-- Banner Flutuante de Notificação (Toast) -->
+  <div *ngIf="toastMessage()" class="fixed top-20 right-6 z-50 p-4 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xl border border-slate-700 text-xs font-semibold flex items-center gap-3 animate-fade-in max-w-md">
     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-    <span class="flex-1">{{ actionMessage() }}</span>
-    <button (click)="actionMessage.set(null)" class="text-slate-400 hover:text-white text-xs">✕</button>
+    <span class="flex-1">{{ toastMessage() }}</span>
+    <button (click)="toastMessage.set(null)" class="text-slate-400 hover:text-white text-xs">✕</button>
   </div>
 
-  <!-- Conteúdo Principal -->
-  <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+  <!-- Conteúdo Principal do Dashboard -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
     
-    <!-- Top Card: Apresentação do Componente -->
-    <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 mb-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          Componente Chave: Datatable Moderno Reutilizável
-        </div>
-        <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-          Datatable com Suporte Híbrido (Estático e HTTP API)
-        </h2>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-3xl">
-          Desenvolvido 100% com Tailwind CSS e Angular Signals. Possui ordenação multinível, busca instantânea, colunas dinâmicas, ações contextuais, seleção única/múltipla, paginação e exportação para CSV.
-        </p>
-      </div>
+    <!-- Hero Banner de Boas-Vindas & Status Executivo -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-navy-900 to-brand-950 text-white p-6 sm:p-8 shadow-xl border border-slate-800">
+      
+      <!-- Formas de Luz Decorativas no Fundo -->
+      <div class="absolute -top-24 -right-24 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <!-- Seletor de Modo / Tabs -->
-      <div class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 self-start md:self-center shrink-0">
-        <button 
-          type="button"
-          (click)="activeTab.set('estatico')"
-          [ngClass]="activeTab() === 'estatico' ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm font-bold' : 'text-slate-600 dark:text-slate-400 font-medium'"
-          class="px-4 py-2 rounded-lg text-xs transition-all">
-          🚗 Modo Estático (Frota)
-        </button>
-
-        <button 
-          type="button"
-          (click)="activeTab.set('http')"
-          [ngClass]="activeTab() === 'http' ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm font-bold' : 'text-slate-600 dark:text-slate-400 font-medium'"
-          class="px-4 py-2 rounded-lg text-xs transition-all">
-          🌐 Modo HTTP API (CT-e)
-        </button>
-      </div>
-    </div>
-
-    <!-- Painel de Demonstração e Simulação Realtime -->
-    <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-500/20 dark:border-emerald-500/30 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-sm shadow-emerald-500/30 shrink-0">
-          <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </div>
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Serviço de Tempo Real (Socket.IO)</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold"
-                  [ngClass]="realtimeService.isConnected() ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'">
-              {{ realtimeService.isConnected() ? '🟢 Conectado ao NestJS (:3000)' : '⚪ Conectando / Eventos Prontos' }}
-            </span>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/20 text-brand-300 border border-brand-500/30 backdrop-blur-sm mb-3">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Sistema Praetor Operando
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Atualizações instantâneas nas linhas com efeito pulse e modo delta update nativo.
+          <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
+            Olá, {{ user?.name || 'Administrador' }}!
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-300/90 mt-1.5 max-w-2xl leading-relaxed">
+            Seja bem-vindo ao Barão v2. Acesse abaixo os módulos operacionais, fiscais, contábeis e de gestão da frota.
           </p>
         </div>
-      </div>
 
-      <!-- Botões de Simulação de Eventos -->
-      <div class="flex items-center gap-2 flex-wrap">
+        <!-- Botão Ação Rápida: Abrir Menu Lateral Completo -->
         <button 
           type="button"
-          (click)="simulateVeiculoStatusChange()"
-          class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold shadow-sm transition-all active:scale-95 flex items-center gap-1.5">
-          <span>⚡ Atualizar Status (Merge)</span>
-        </button>
-        <button 
-          type="button"
-          (click)="simulateNewVeiculo()"
-          class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition-all active:scale-95 flex items-center gap-1.5">
-          <span>⚡ Inserir Veículo Novo</span>
-        </button>
-        <button 
-          type="button"
-          (click)="simulateNewCte()"
-          class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition-all active:scale-95 flex items-center gap-1.5">
-          <span>⚡ Novo CT-e (Notify)</span>
+          (click)="moduleService.openDrawer()"
+          class="self-start md:self-center px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-xs backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 shadow-lg">
+          <svg class="w-4 h-4 text-brand-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+          </svg>
+          <span>Abrir Menu Lateral</span>
         </button>
       </div>
-    </div>
 
-    <!-- TAB 1: DATATABLE COM DADOS ESTÁTICOS -->
-    <div *ngIf="activeTab() === 'estatico'" class="animate-fade-in">
-      <app-datatable
-        [title]="'Controle de Veículos e Frota'"
-        [subtitle]="'Gerencie os veículos cadastrados, capacidades de carga e ordens de manutenção.'"
-        [data]="veiculosData"
-        [columns]="veiculosColumns"
-        [actions]="veiculosActions"
-        [realtimeConfig]="veiculosRealtimeConfig"
-        [selectable]="true"
-        [multiSelect]="true"
-        [searchable]="true"
-        [searchPlaceholder]="'Pesquisar placa, modelo, motorista...'"
-        [pageSize]="5"
-        [pageSizeOptions]="[5, 10, 20, 50]"
-        (selectionChange)="onRowSelect($event)">
-      </app-datatable>
-    </div>
+      <!-- Barra de Estatísticas Rápidas do Sistema -->
+      <div class="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-8 pt-6 border-t border-white/10 text-xs">
+        <div class="p-3 rounded-2xl bg-white/5 border border-white/5">
+          <div class="text-slate-400 text-[11px] font-medium">Módulos do Sistema</div>
+          <div class="text-xl sm:text-2xl font-black text-white mt-0.5">{{ moduleService.modules().length }} Módulos</div>
+          <div class="text-[10px] text-emerald-400 mt-0.5">● 100% ativos</div>
+        </div>
 
-    <!-- TAB 2: DATATABLE COM API HTTP -->
-    <div *ngIf="activeTab() === 'http'" class="animate-fade-in">
-      <app-datatable
-        [title]="'Emissão de Conhecimentos de Transporte (CT-e)'"
-        [subtitle]="'Carregamento assíncrono via API com paginação e busca reativa direto no backend.'"
-        [columns]="fretesColumns"
-        [actions]="fretesActions"
-        [apiConfig]="fretesApiConfig"
-        [realtimeConfig]="fretesRealtimeConfig"
-        [selectable]="true"
-        [multiSelect]="false"
-        [searchable]="true"
-        [searchPlaceholder]="'Pesquisar número do CT-e, tomador, origem...'"
-        [pageSize]="5"
-        [pageSizeOptions]="[5, 10, 20]"
-        (selectionChange)="onRowSelect($event)">
-      </app-datatable>
-    </div>
+        <div class="p-3 rounded-2xl bg-white/5 border border-white/5">
+          <div class="text-slate-400 text-[11px] font-medium">Recursos & Tabelas</div>
+          <div class="text-xl sm:text-2xl font-black text-white mt-0.5">{{ totalResourcesCount() }} Telas</div>
+          <div class="text-[10px] text-brand-300 mt-0.5">Catalogadas no Praetor</div>
+        </div>
 
-    <!-- Rodapé com Versão e Data/Hora -->
-    <footer class="pt-6 pb-2 text-center text-xs text-slate-400 dark:text-slate-500 border-t border-slate-200/60 dark:border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-2">
-      <div class="flex items-center gap-1.5">
-        <span class="font-semibold text-slate-600 dark:text-slate-400">Barão v2</span>
-        <span>&bull;</span>
-        <span>Transoeste Logística</span>
+        <div class="p-3 rounded-2xl bg-white/5 border border-white/5">
+          <div class="text-slate-400 text-[11px] font-medium">Empresa em Operação</div>
+          <div class="text-base sm:text-lg font-bold text-white mt-1 truncate">{{ empresaAtivaNome }}</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Base Matriz</div>
+        </div>
+
+        <div class="p-3 rounded-2xl bg-white/5 border border-white/5">
+          <div class="text-slate-400 text-[11px] font-medium">Conexão Socket.IO</div>
+          <div class="text-base sm:text-lg font-bold text-emerald-400 mt-1">Tempo Real</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Porta :3000 online</div>
+        </div>
       </div>
+
+    </div>
+
+    <!-- Barra de Busca Instantânea e Filtro por Categoria de Módulos -->
+    <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+      
+      <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <!-- Campo de Busca Dinâmica -->
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input 
+            type="text"
+            [ngModel]="moduleService.searchQuery()"
+            (ngModelChange)="moduleService.searchQuery.set($event)"
+            placeholder="Pesquise por qualquer módulo ou recurso (ex: CTe, Viagem, Pneu, Fatura, Frota, Folha, Contas)..."
+            class="w-full pl-11 pr-10 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all shadow-inner">
+          
+          <button 
+            *ngIf="moduleService.searchQuery()" 
+            type="button"
+            (click)="moduleService.searchQuery.set('')"
+            class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm">
+            ✕
+          </button>
+        </div>
+
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0 self-center">
+          Exibindo {{ moduleService.filteredModules().length }} de {{ moduleService.modules().length }} módulos
+        </div>
+      </div>
+
+      <!-- Filtro por Pílulas de Categoria -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 pt-1 text-xs">
+        <button 
+          *ngFor="let cat of categories"
+          type="button"
+          (click)="selectCategory(cat.id)"
+          [ngClass]="moduleService.selectedCategory() === cat.id 
+            ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/30 font-bold' 
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-medium'"
+          class="px-3.5 py-1.5 rounded-xl whitespace-nowrap transition-all active:scale-95 flex items-center gap-1.5">
+          <span>{{ cat.label }}</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Catálogo de Módulos do Sistema Praetor (Grid de Cards Interativos) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+      
+      <div 
+        *ngFor="let mod of moduleService.filteredModules()"
+        (click)="openModuleDetails(mod)"
+        class="group relative rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:shadow-xl hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-all duration-200 cursor-pointer flex flex-col justify-between hover:-translate-y-1">
+        
+        <div>
+          <!-- Header do Card: Ícone e Categoria -->
+          <div class="flex items-start justify-between gap-3 mb-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br {{ mod.color || 'from-brand-600 to-indigo-600' }} text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-200 shrink-0">
+              <!-- Ícone SVG -->
+              <ng-container [ngSwitch]="mod.route">
+                <svg *ngSwitchCase="'trafego'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                </svg>
+                <svg *ngSwitchCase="'fiscal'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <svg *ngSwitchCase="'financeiro'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <svg *ngSwitchCase="'contabil'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <svg *ngSwitchCase="'comercial'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <svg *ngSwitchCase="'manutencao'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <svg *ngSwitchCase="'borracharia'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <svg *ngSwitchCase="'pessoa'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <svg *ngSwitchCase="'rh'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <svg *ngSwitchCase="'despachante'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <svg *ngSwitchCase="'geolocal'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <svg *ngSwitchCase="'seguranca'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <svg *ngSwitchCase="'nuvem'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z" />
+                </svg>
+                <svg *ngSwitchCase="'system'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <svg *ngSwitchDefault class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </ng-container>
+            </div>
+
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+              {{ mod.resources.length }} recursos
+            </span>
+          </div>
+
+          <!-- Título e Descrição do Módulo -->
+          <h3 class="text-base font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+            {{ mod.name }}
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+            {{ mod.description }}
+          </p>
+
+          <!-- Tags dos Principais Recursos -->
+          <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+            <span 
+              *ngFor="let res of mod.resources.slice(0, 3)"
+              class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+              {{ res.name }}
+            </span>
+            <span *ngIf="mod.resources.length > 3" class="text-[10px] text-slate-400 self-center">
+              +{{ mod.resources.length - 3 }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Ação do Card: Acessar Recursos -->
+        <div class="mt-4 pt-3 flex items-center justify-between text-xs font-bold text-brand-600 dark:text-brand-400 group-hover:translate-x-1 transition-transform">
+          <span>Ver Recursos & Telas</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Empty State se a busca não retornar nada no grid -->
+    <div *ngIf="moduleService.filteredModules().length === 0" class="p-12 text-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mb-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 class="text-sm font-bold text-slate-900 dark:text-white">Nenhum módulo ou recurso encontrado</h3>
+      <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+        Tente buscar com outro termo ou clique no botão abaixo para redefinir os filtros.
+      </p>
+      <button 
+        type="button" 
+        (click)="moduleService.searchQuery.set(''); moduleService.selectedCategory.set('todos')"
+        class="mt-4 px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold shadow-sm hover:bg-brand-500 transition-colors">
+        Limpar Filtros de Busca
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Rodapé com Versão e Data/Hora estrita DD/MM/YYYY HH:mm -->
+  <footer class="mt-auto py-5 px-6 text-center text-xs text-slate-400 dark:text-slate-500 border-t border-slate-200/80 dark:border-slate-800/80 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
       <div class="flex items-center gap-2">
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-mono text-[11px] border border-slate-200/60 dark:border-slate-700/60">
+        <span class="font-extrabold text-slate-700 dark:text-slate-300">Barão v2</span>
+        <span>&bull;</span>
+        <span>Transoeste Logística & Transporte</span>
+        <span>&bull;</span>
+        <span class="text-slate-400">Sistema Praetor</span>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] border border-slate-200 dark:border-slate-700">
           <span class="font-bold text-brand-600 dark:text-brand-400">v{{ versionCheckService.currentVersion() }}</span>
           <span *ngIf="versionCheckService.currentUpdatedAt()" class="text-slate-300 dark:text-slate-600">&bull;</span>
           <span *ngIf="versionCheckService.currentUpdatedAt()">{{ versionCheckService.currentUpdatedAt() }}</span>
         </span>
       </div>
-    </footer>
+    </div>
+  </footer>
 
-  </main>
+</div>
+
+<!-- MODAL / SLIDEOVER DE DETALHES DO MÓDULO E SEUS RECURSOS -->
+<div 
+  *ngIf="moduleService.selectedModule()" 
+  class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+  
+  <div class="w-full max-w-3xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    
+    <!-- Header do Modal -->
+    <div class="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-3.5">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br {{ moduleService.selectedModule()?.color || 'from-brand-600 to-indigo-600' }} text-white flex items-center justify-center shadow-md shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+              {{ moduleService.selectedModule()?.name }}
+            </h3>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+              {{ moduleService.selectedModule()?.categoryLabel }}
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            {{ moduleService.selectedModule()?.description }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Fechar Modal -->
+      <button 
+        type="button" 
+        (click)="closeModuleDetails()"
+        class="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Lista de Recursos do Módulo Selecionado (Scrollável) -->
+    <div class="p-6 overflow-y-auto flex-1 space-y-4">
+      <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+        <span>Recursos e Telas do Módulo ({{ moduleService.selectedModule()?.resources?.length }})</span>
+        <span class="text-slate-400 font-mono text-[11px]">Rota base: /{{ moduleService.selectedModule()?.route }}</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div 
+          *ngFor="let res of moduleService.selectedModule()?.resources"
+          (click)="openResource(moduleService.selectedModule()!, res)"
+          class="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 hover:border-brand-500/40 transition-all cursor-pointer group flex flex-col justify-between">
+          
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <span class="font-bold text-xs text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                {{ res.name }}
+              </span>
+              <span 
+                class="px-2 py-0.5 rounded text-[10px] font-semibold"
+                [ngClass]="{
+                  'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300': res.class === 1,
+                  'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300': res.class === 2,
+                  'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300': res.class === 3
+                }">
+                {{ res.class === 1 ? 'Cadastro' : res.class === 2 ? 'Operação' : 'Relatório' }}
+              </span>
+            </div>
+
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
+              {{ res.description || 'Gestão e registros de ' + res.name + ' no módulo.' }}
+            </p>
+          </div>
+
+          <div class="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-[11px]">
+            <span class="font-mono text-slate-400">/{{ moduleService.selectedModule()?.route }}/{{ res.route }}</span>
+            <span class="font-bold text-brand-600 dark:text-brand-400 group-hover:underline">Acessar &rarr;</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer do Modal -->
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between text-xs">
+      <span class="text-slate-400">Praetor TMS & ERP Architecture</span>
+      <button 
+        type="button" 
+        (click)="closeModuleDetails()"
+        class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold shadow-sm transition-colors">
+        Fechar
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- MODAL DE VISUALIZAÇÃO DO RECURSO SELECIONADO -->
+<div 
+  *ngIf="activeResourceModal()" 
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+  
+  <div class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+    
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm">
+          ✓
+        </div>
+        <div>
+          <h4 class="text-base font-bold text-slate-900 dark:text-white">
+            {{ activeResourceModal()?.resource?.name }}
+          </h4>
+          <span class="text-xs text-slate-400 font-mono">
+            /{{ activeResourceModal()?.module?.route }}/{{ activeResourceModal()?.resource?.route }}
+          </span>
+        </div>
+      </div>
+
+      <button 
+        type="button" 
+        (click)="closeResourceModal()" 
+        class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+        ✕
+      </button>
+    </div>
+
+    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 text-xs space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-slate-400">Módulo Pai:</span>
+        <span class="font-bold text-slate-800 dark:text-slate-200">{{ activeResourceModal()?.module?.name }}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-400">Classificação:</span>
+        <span class="font-semibold text-brand-600 dark:text-brand-400">
+          {{ activeResourceModal()?.resource?.class === 1 ? 'Tabela / Cadastro' : activeResourceModal()?.resource?.class === 2 ? 'Operação / Movimentação' : 'Relatório Gerencial' }}
+        </span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-400">Endpoint da API:</span>
+        <span class="font-mono text-[11px] text-slate-700 dark:text-slate-300">/api/{{ activeResourceModal()?.module?.route }}/{{ activeResourceModal()?.resource?.route }}</span>
+      </div>
+      <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 leading-relaxed">
+        {{ activeResourceModal()?.resource?.description || 'Recurso cadastrado e vinculado ao módulo no Praetor.' }}
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 pt-2">
+      <button 
+        type="button" 
+        (click)="closeResourceModal()"
+        class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        Voltar ao Catálogo
+      </button>
+      <button 
+        type="button" 
+        (click)="showToast('Navegando para ' + activeResourceModal()?.resource?.name + '...'); closeResourceModal(); closeModuleDetails();"
+        class="px-5 py-2 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white shadow-sm transition-colors">
+        Confirmar Acesso
+      </button>
+    </div>
+
+  </div>
+
 </div>
