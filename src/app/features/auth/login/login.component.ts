@@ -55,6 +55,9 @@ export class LoginComponent implements OnInit {
   public get version(): string {
     return this.versionCheckService.currentVersion();
   }
+  public get updatedAt(): string {
+    return this.versionCheckService.currentUpdatedAt();
+  }
 
   public loginForm!: FormGroup;
   public isLoading = signal<boolean>(false);

@@ -64,12 +64,17 @@ export class VersionCheckService {
    */
   public getCurrentUpdatedAt(): string {
     const win = typeof window !== 'undefined' ? (window as any) : {};
-    const buildDate = win.__APP_UPDATED_AT__ || (environment as any).updated_at || '';
+    if (win.__APP_UPDATED_AT__) {
+      return win.__APP_UPDATED_AT__;
+    }
+    if ((environment as any).updated_at) {
+      return (environment as any).updated_at;
+    }
     if (typeof localStorage !== 'undefined') {
       const storedDate = localStorage.getItem('barao_app_updated_at');
       if (storedDate) return storedDate;
     }
-    return buildDate;
+    return '';
   }
 
   /**
