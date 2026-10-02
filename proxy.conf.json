@@ -1,0 +1,8 @@
+{
+  "/api": {
+    "target": "https://dev.praetor.local",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
