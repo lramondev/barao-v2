@@ -1,20 +1,54 @@
-const { execSync } = require('child_process');
+const { 
+  getDistPath,
+  getVersionInfo, 
+  applyVersionAndDate, 
+  buildAngular, 
+  injectBuildInfo, 
+  deployFrontend, 
+  saveDeployInfo 
+} = require('./deploy-helper');
+const path = require('path');
 
-console.log('🚀 Iniciando deploy do Barão v2 no servidor remoto...\n');
+const isLocal = process.argv.includes('local') || process.argv.includes('--local');
+const targetHost = isLocal ? '192.168.1.240' : 'remoto.transoeste.com.br';
 
-try {
-  // 1. Garante que os commits locais estão no GitHub
-  console.log('1. Enviando alterações locais para o GitHub...');
-  execSync('git push origin main', { stdio: 'inherit' });
+console.log(`Modo de implantação do Frontend Barão v2: ${isLocal ? 'LOCAL (192.168.1.240)' : 'REMOTO (remoto.transoeste.com.br)'}`);
 
-  // 2. Executa pull e build no servidor remoto via script python
-  console.log('\n2. Atualizando e compilando no servidor remoto...');
-  const remoteCmd = 'cd /ws/node/barao-v2 && git pull origin main && npm run build';
-  execSync(`py "C:\\Users\\rafae\\.gemini\\antigravity\\brain\\1e099e5d-51e2-424d-806d-b48b865586dc\\remote_exec.py" "${remoteCmd}"`, { stdio: 'inherit' });
+// 1. Obtém a versão e data/hora
+const versionInfo = getVersionInfo();
 
-  console.log('\n🎉 Deploy concluído com sucesso!');
-  console.log('Acesse a nova versão em: https://barao.transoeste.com.br/v2/\n');
-} catch (err) {
-  console.error('\n❌ Erro durante o deploy:', err.message);
+// 2. Executa o build da aplicação Angular para produção
+const buildSuccess = buildAngular();
+if (!buildSuccess) {
+  console.error('\nErro: A compilação do Angular falhou.');
   process.exit(1);
 }
+
+console.log('\nCompilação concluída com sucesso!');
+
+// 3. Injeta a versão e data/hora diretamente no index.html gerado
+const distPath = getDistPath();
+injectBuildInfo(distPath, versionInfo);
+
+// 4. Envia os arquivos para o servidor via rsync
+const deploySuccess = deployFrontend(targetHost);
+if (!deploySuccess) {
+  console.error('\nErro: Falha no envio dos arquivos do frontend via rsync.');
+  process.exit(1);
+}
+
+// 5. Salva o registro da versão/deploy
+saveDeployInfo(versionInfo);
+
+// 6. Atualiza package.json e package-lock.json após o término do build e envio
+if (versionInfo.changed) {
+  applyVersionAndDate(versionInfo);
+}
+
+if (versionInfo.changed) {
+  console.log(`\nImplantação concluída com sucesso! Versão v${versionInfo.newVersion} (${versionInfo.newDate}) gerada e publicada.`);
+} else {
+  console.log(`\nImplantação concluída com sucesso! Nenhuma modificação no código; versão v${versionInfo.newVersion} (${versionInfo.newDate}) mantida.`);
+}
+console.log(`\nDestino publicado: lrdev@${targetHost}:/ws/php/barao/public/v2/`);
+console.log(`URL de Acesso: https://${isLocal ? '192.168.1.240' : 'barao.transoeste.com.br'}/v2/\n`);
